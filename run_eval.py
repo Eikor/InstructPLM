@@ -19,4 +19,4 @@ with torch.no_grad():
     with torch.cuda.amp.autocast(dtype=torch.float16):
         output = model(**batch)
 
-print(output.loss.item())
+print(f'loss: {output.loss.item()}, perplexity: {torch.exp(output.loss.item())}')

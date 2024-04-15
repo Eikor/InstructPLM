@@ -9,16 +9,11 @@ from Bio import SeqIO, BiopythonParserWarning
 import warnings
 import torch
 import pickle
-import pathlib
 import glob
 
-import sys
-sys.path.append(os.getcwd())
-sys.path.append(os.path.join(os.getcwd(), 'open_flamingo'))
 
 warnings.simplefilter('ignore', BiopythonParserWarning)
 
-# sys.path.append('/root/open_flamingo/preprocess_esmfold')
 from ProteinMPNN.protein_mpnn_utils import ProteinMPNN
 from ProteinMPNN.protein_mpnn_utils import tied_featurize
 
@@ -85,11 +80,7 @@ def create_parser():
 
     args_mpnn, _ = argparser_mpnn.parse_known_args()
 
-    argparser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    argparser.add_argument("--mpnn_path", type=str, default='preprocess_esmfold/ProteinMPNN') 
-
-    args, _ = argparser.parse_known_args()
-    return args_mpnn, args
+    return args_mpnn
 
 def load_model(checkpoint, ca=False):
         model = ProteinMPNN(ca_only=ca, 
@@ -281,7 +272,7 @@ def process_pdb_biotite_fn(pdb_byte):
 
 
 ################## load model #################
-args_mpnn, args_pifold, args = create_parser()
+args_mpnn = create_parser()
 
 model_1 = load_model(torch.load('ProteinMPNN/vanilla_model_weights/v_48_002.pt'), ca=False)
 model_2 = load_model(torch.load('ProteinMPNN/vanilla_model_weights/v_48_010.pt'), ca=False)
@@ -314,7 +305,7 @@ def write_pyd():
             "seq_chain_A": entry["seq"]
         }
         record = process_mpnn_embedding_fn(record)
-        with open(f'{save_name}.pyd', 'wb') as f:
+        with open(f'structure_embeddings/{save_name}.pyd', 'wb') as f:
             pickle.dump(record, f)
 
 write_pyd()
