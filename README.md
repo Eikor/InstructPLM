@@ -12,7 +12,8 @@ Code organization:
 * `pdbs/` - input PDB files.
 * `structure_embeddings/` - input preprocessed structure embeddings.
 
-Make sure you have obtained structure embedding before run InstructPLM, you can construct preprocessed structure embeddings by `python structure_embeddings/preprocess.py`.
-This script will process protein pdbs stored in `pdbs/` and save result in `structure_embeddings/`.
+Make sure you have obtained structure embedding before running InstructPLM, you can construct preprocessed structure embeddings by `python structure_embeddings/preprocess.py`.
+This script will process protein pdbs stored in `pdbs/` and save the result in `structure_embeddings/`.
 
-For generation, run `python run_generate.py --total 10 --save_suffix test`
+For protein generation, run `python run_generate.py --total 10 --save_suffix test`.
+This script will read embeddings automatically in `structure_embeddings/` and save the result at the path specified by `--save_prefix`.
