@@ -2,7 +2,7 @@
 ![image](assets/framework.png)
 Design protein sequences following structure instructions.
 
-Read the [InstructPLM]((https://www.biorxiv.org/content/10.1101/2024.04.17.589642v1)) paper. 
+Read the [InstructPLM](https://www.biorxiv.org/content/10.1101/2024.04.17.589642v1) paper. 
 
 To run InstructPLM clone this github repo and install dependence: `pip install -r requirements.txt`.
 
