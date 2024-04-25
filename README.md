@@ -8,6 +8,7 @@ You can launch an instance of instructPLM with the following commands:
 ```bash
 docker pull jundesiat/instructplm:mpnn-progen2-xlarge
 docker run --gpus all -it -v /path/to/input_output:/workspace/ jundesiat/instructplm:mpnn-progen2-xlarge
+cd /root/InstructPLM
 ```
 
 Or you can run InstructPLM from the source code, clone this repo and install dependence: 
