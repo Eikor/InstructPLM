@@ -138,7 +138,7 @@ if __name__ =='__main__':
 
     args = get_args()
 
-    tokenizer = AutoTokenizer.from_pretrained('InstrctPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained('InstructPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained('InstructPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
 
     model.cuda().eval()
