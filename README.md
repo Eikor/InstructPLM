@@ -65,7 +65,7 @@ structure_embeddings
 python recovery_rate.py --sequence_path recovery_res/ --generate
 ``` 
 >[!NOTE]
->Recovery rate only supports protein sequences generated with fix-length. Different seed can cause different results. 
+>Recovery rate **only** supports protein sequences generated with fix-length. Different seeds can cause different results. 
 
 
 ## Results
