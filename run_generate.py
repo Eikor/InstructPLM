@@ -96,7 +96,6 @@ def run_design(model, tokenizer,
         pbar = tqdm(total=total, desc=f'generate {s}')
         while len(res) < total:
             with torch.no_grad():
-                # use '12' for 13B
                 input_ids, labels, attn_mask = prepare_inputs(s, tokenizer, device=model.device)
                 # use inputs for peft model and automodel 
                 tokens_batch = model.generate(
