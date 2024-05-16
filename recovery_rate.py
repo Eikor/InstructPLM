@@ -70,8 +70,8 @@ def load_ref(paths):
     return res
 
 def load_model():
-    tokenizer = AutoTokenizer.from_pretrained('MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained('MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained('InstructPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained('InstructPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
 
     model.cuda().eval()
     model.requires_grad_(False)
