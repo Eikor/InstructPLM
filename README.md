@@ -25,16 +25,18 @@ pip install -r requirements.txt
 </p>
 
 Code organization:
-* `run_eval.py` - gives a minimal code of model evaluation (LM-Loss and perplexity).
-* `run_generate.py` - example of generate protein sequence.
-* `pdbs/` - input PDB files.
-* `structure_embeddings/` - input preprocessed structure embeddings.
+* [run_eval.py](./run_eval.py) - gives a minimal code of model evaluation (LM-Loss and perplexity).
+* [run_generate.py](./run_generate.py) - example of generate protein sequence.
+* [recovery_rate.py](./recovery_rate.py) - example of calculating recovery rate of generated sequences.
+* [pdbs](pdbs/) - input PDB files.
+* [structure_embeddings](structure_embeddings/) - input preprocessed structure embeddings.
 
 >[!IMPORTANT]
 > Make sure you have obtained structure embedding before running InstructPLM, you can construct preprocessed structure embeddings by `python structure_embeddings/preprocess.py`.
 This script will process protein pdbs stored in `pdbs/` and save the result in `structure_embeddings/`.
 
-For protein generation, run `python run_generate.py --total 10 --save_suffix test`.
+### Protein Design
+For protein design, run `python run_generate.py --total 10 --save_suffix test`.
 This script will read embeddings automatically in `structure_embeddings/` and save the result at the path specified by `--save_prefix`.
 For generating fix-length proteins, setting `--fix_length=True`.
 
@@ -42,6 +44,29 @@ For generating fix-length proteins, setting `--fix_length=True`.
 >Large language models some times suffer from [Hallucinations](https://arxiv.org/pdf/2311.05232), so as pLMs :thinking: . You may need to generate a large set of candidates and a select policy (e.g., TM-Score, DEDAL, etc.) to get better results.
 
 InstructPLM requires a GPU with more than 24GB of VRAM to run, if you encounter an OOM issue, you can try reducing the `--num_return_sequences`.
+
+### Recovery Rate
+[recovery_rate.py](./recovery_rate.py) gives a example for calculating recovery rate of generated sequences.
+
+**1. Calculate recovery rate of pre-generated sequences** by indicating the `--sequence_path` and `--sequence_suffix` arguments.
+The script read sequences file organized as follows:
+```
+sequences_path
+   ├── seq1_suffix.fasta
+   ...
+   ├── seqN_suffix.fasta
+structure_embeddings
+   ├── ref1.pyd
+   ...
+   └── refN.pyd
+```
+**2. Generate and calculating use pre-defined parameters.**   Set `--generate` as **True** and passing a empty sequence path.
+```python
+python recovery_rate.py --sequence_path recovery_res/ --generate
+``` 
+>[!NOTE]
+>Recovery rate only supports protein sequences generated with fix-length. Different seed can cause different results. 
+
 
 ## Results
 

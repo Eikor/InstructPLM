@@ -77,7 +77,7 @@ def run_design(model, tokenizer,
         if pyd['seq'] is not None:
             seq_length = len(pyd['seq']) + 1
             
-            if seq_length > args.max_length:
+            if seq_length > max_length:
                 print('overlenth, skip')
                 continue
             if not fix_length:
