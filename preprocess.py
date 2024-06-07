@@ -1,18 +1,11 @@
 import copy
 import argparse
-from tqdm import tqdm
 import numpy as np
-import os
 import biotite.structure.io.pdb
 import io
-from Bio import SeqIO, BiopythonParserWarning
-import warnings
 import torch
 import pickle
 import glob
-
-
-warnings.simplefilter('ignore', BiopythonParserWarning)
 
 from ProteinMPNN.protein_mpnn_utils import ProteinMPNN
 from ProteinMPNN.protein_mpnn_utils import tied_featurize
@@ -285,7 +278,7 @@ model_8 = load_model(torch.load('ProteinMPNN/ca_model_weights/v_48_010.pt'), ca=
 model_9 = load_model(torch.load('ProteinMPNN/ca_model_weights/v_48_020.pt'), ca=True)
 
 def write_pyd():
-    for pdb_file in glob.iglob("pdbs/*.pdb"):
+    for pdb_file in glob.iglob("proteingym/ProteinGym_384_pdbs/*.pdb"):
         print(pdb_file)
         save_name = pdb_file.split('/')[-1].split('.')[0]
         with open(pdb_file, "rb") as f:
@@ -305,7 +298,7 @@ def write_pyd():
             "seq_chain_A": entry["seq"]
         }
         record = process_mpnn_embedding_fn(record)
-        with open(f'structure_embeddings/{save_name}.pyd', 'wb') as f:
+        with open(f'proteingym/ProteinGym_384_emb/{save_name}.pyd', 'wb') as f:
             pickle.dump(record, f)
 
 write_pyd()
