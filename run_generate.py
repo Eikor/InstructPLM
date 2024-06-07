@@ -77,7 +77,7 @@ def run_design(model, tokenizer,
         if pyd['seq'] is not None:
             seq_length = len(pyd['seq']) + 1
             
-            if seq_length > args.max_length:
+            if seq_length > max_length:
                 print('overlenth, skip')
                 continue
             if not fix_length:
@@ -96,7 +96,6 @@ def run_design(model, tokenizer,
         pbar = tqdm(total=total, desc=f'generate {s}')
         while len(res) < total:
             with torch.no_grad():
-                # use '12' for 13B
                 input_ids, labels, attn_mask = prepare_inputs(s, tokenizer, device=model.device)
                 # use inputs for peft model and automodel 
                 tokens_batch = model.generate(
@@ -138,7 +137,7 @@ if __name__ =='__main__':
 
     args = get_args()
 
-    tokenizer = AutoTokenizer.from_pretrained('InstrctPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained('InstructPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained('InstructPLM/MPNN-ProGen2-xlarge-CATH42', trust_remote_code=True)
 
     model.cuda().eval()
