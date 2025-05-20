@@ -9,6 +9,12 @@ import glob
 
 from ProteinMPNN.protein_mpnn_utils import ProteinMPNN
 from ProteinMPNN.protein_mpnn_utils import tied_featurize
+from ProRefiner.run import run_one_batch_entire 
+from ProRefiner.model.model import Model
+import esm
+import copy
+from chroma import Protein,Chroma
+from chroma.layers.structure.protein_graph import ProteinFeatureGraph
 
 from typing import List
 import biotite.structure
@@ -262,7 +268,58 @@ def get_atom_coords_residuewise(atoms: List[str], struct: biotite.structure.Atom
 def process_pdb_biotite_fn(pdb_byte):
     return load_coords(io.StringIO(pdb_byte.decode()))
 
+def process_esm_if_embedding_fn(sample):
+    coords = sample["coords"][:, :3, :]
+    with torch.inference_mode():
+        esm_if_emb = esm.inverse_folding.util.get_encoder_output(esm_if_model, esm_if_alphabet, coords)
+    sample["esm_if_emb"] = esm_if_emb.cpu()
+    return sample
 
+
+def process_chroma_embedding_fn(sample, split='train', pdb_path=''):
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    pdb_base_dir = f"/bio/gzj/cath4.2/pdb/{split}"
+    pdb_file_path = pdb_base_dir + f'/{sample["title"]}.pdb'
+    if pdb_path is not None:
+        pdb_file_path = pdb_path
+
+    X = torch.tensor(sample['coords']).unsqueeze(0).cuda()
+
+    C = (torch.isnan(torch.sum(X, dim=-1).sum(dim=-1)) * -2 + 1).cuda()
+    X = torch.nan_to_num(X, nan=0)
+    chroma.design_network.encoder.feature_graph.graph_builder.deterministic = True
+    chroma.design_network.encoder.feature_graph.graph_builder.deterministic_seed = 42
+
+    # X_update = X
+    # for i in range(chroma.backbone_network.num_graph_cycles):
+    #     node_h_backbone, edge_h, edge_idx, mask_i, mask_ij = chroma.backbone_network.encoders[i](
+    #         X_update,
+    #         C)
+        
+    # sample['chroma_emb_backbone'] = node_h_backbone.squeeze(0)
+
+    with torch.no_grad():
+        node_h_design, edge_h, edge_idx, mask_i, mask_ij = chroma.design_network.encoder(X,C)
+    sample['chroma_emb_design'] = node_h_design.squeeze(0).detach()
+    if len(sample['chroma_emb_design']) != len(sample['esm_if_emb']):
+        print(pdb_file_path)
+        print(X.shape)
+        print(sample['esm_if_emb'].shape)
+        print(sample['chroma_emb_design'].shape)
+
+    return sample
+
+def process_prorefiner_embedding_fn(sample):
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+    for _, a in enumerate(["N", "CA", "C", "O"]):
+        sample['coords_chain_A'][a] =  sample['coords_chain_A'][a + "_chain_A"].tolist()
+    assert len(sample['seq']) == len(sample['coords_chain_A']["CA"])
+
+    batch_pro = [{"name":sample['title'],"seq":sample['seq'],"coords":sample['coords_chain_A']}]
+    h_V = run_one_batch_entire(batch_pro, device, model=model_prorefiner)
+    sample['prorefiner_emb'] = h_V[0]
+    return sample
 
 ################## load model #################
 args_mpnn = create_parser()
@@ -276,6 +333,18 @@ model_6 = load_model(torch.load('ProteinMPNN/soluble_model_weights/v_48_020.pt')
 model_7 = load_model(torch.load('ProteinMPNN/ca_model_weights/v_48_002.pt'), ca=True)
 model_8 = load_model(torch.load('ProteinMPNN/ca_model_weights/v_48_010.pt'), ca=True)
 model_9 = load_model(torch.load('ProteinMPNN/ca_model_weights/v_48_020.pt'), ca=True)
+
+esm_if_model, esm_if_alphabet = esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
+esm_if_model = esm_if_model.cuda().eval()
+
+#ckpt for prorefiner
+checkpoint = torch.load("preprocess_esmfold/ProRefiner/model/checkpoint.pth", map_location='cuda')
+model_prorefiner = Model(checkpoint["args"], 30, n_head = checkpoint["args"].encoder_attention_heads).cuda()
+model_prorefiner.load_state_dict(checkpoint["model_state_dict"])
+model_prorefiner.eval()
+
+chroma = Chroma()
+
 
 def write_pyd():
     for pdb_file in glob.iglob("pdbs/*.pdb"):
@@ -298,6 +367,9 @@ def write_pyd():
             "seq_chain_A": entry["seq"]
         }
         record = process_mpnn_embedding_fn(record)
+        record = process_esm_if_embedding_fn(record)
+        record = process_prorefiner_embedding_fn(record)
+        record = process_chroma_embedding_fn(record)
         with open(f'structure_embeddings/{save_name}.pyd', 'wb') as f:
             pickle.dump(record, f)
 
